@@ -25,13 +25,13 @@ function updateScreenState() {
 
     if (remainingTime > 0) {
         // May oras: Itago ang lock screen, ipakita ang mga laro
-        lockScreen.style.display = 'none';
-        mainDashboard.style.display = 'block';
+        if (lockScreen) lockScreen.style.display = 'none';
+        if (mainDashboard) mainDashboard.style.display = 'block';
         startTimer();
     } else {
         // Ubos na ang oras: Ipakita ang pulang lock screen framework
-        lockScreen.style.display = 'flex';
-        mainDashboard.style.display = 'none';
+        if (lockScreen) lockScreen.style.display = 'flex';
+        if (mainDashboard) mainDashboard.style.display = 'none';
         stopTimer();
     }
 }
@@ -78,6 +78,7 @@ function startTimer() {
     }, 1000);
 }
 
+// Patayin ang timer kapag ubos na ang oras
 function stopTimer() {
     if (timeInterval) {
         clearInterval(timeInterval);
@@ -85,18 +86,48 @@ function stopTimer() {
     }
 }
 
+// I-update ang text ng oras sa dashboard (MM:SS format)
 function updateTimerDisplay() {
     const minutes = Math.floor(remainingTime / 60);
     const seconds = remainingTime % 60;
     const formattedTime = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
     
-    // I-update ang text ng oras sa dashboard
     const timerDisplay = document.getElementById('timerDisplay');
     if (timerDisplay) timerDisplay.innerText = formattedTime;
 }
 
 // ==========================================
-// 4. ADMIN DASHBOARD ACTIONS (CRUD)
+// 4. COIN SLOT LISTENER (ANTI-SPAM & ACCUMULATION)
+// ==========================================
+// Ang function na ito ang tatawagin ng iyong hardware interface (Websocket/HTTP request)
+// Awtomatiko nitong idinaragdag at pinatatapong ang oras kahit mag-spam ang user
+function receiveCoinSignal(coinValue) {
+    let minutesToAdd = 0;
+
+    // Set up ng rates: Baguhin ang minuto depende sa gusto mong presyo
+    if (coinValue === 1) {
+        minutesToAdd = 5;   // 1 Piso = 5 Minuto
+    } else if (coinValue === 5) {
+        minutesToAdd = 25;  // 5 Piso = 25 Minuto
+    } else if (coinValue === 10) {
+        minutesToAdd = 60;  // 10 Piso = 60 Minuto
+    }
+
+    if (minutesToAdd > 0) {
+        // MATALINONG PAGPAPATONG (Accumulation): Idagdag sa kasalukuyang natitirang oras
+        remainingTime += (minutesToAdd * 60);
+        
+        // Permanenteng i-save agad sa memorya para iwas-kupit kahit mag-restart ang CP
+        localStorage.setItem('vendo_time', remainingTime);
+        
+        // Agarang i-update ang screen para alam ng user na pumasok ang barya nila
+        updateTimerDisplay();
+        updateScreenState();
+    }
+}
+
+// ==========================================
+// 5. ADMIN DASHBOARD ACTIONS (CRUD)
 // ==========================================
 function renderAppList() {
     const appGrid = document.getElementById('appGrid');
@@ -104,7 +135,7 @@ function renderAppList() {
     
     if (!appGrid) return;
 
-    // Linisin ang lumang listahan bago i-render ang bago
+    // Linisin ang mga lumang listahan bago i-render ang bago
     appGrid.innerHTML = '';
     if (adminAppList) adminAppList.innerHTML = '';
 
@@ -132,7 +163,7 @@ function renderAppList() {
             
             adminItem.innerHTML = `
                 <div><strong>${app.name}</strong> (${app.package})</div>
-                <button onclick="deleteApp(${index})" style="background:#ff4d4d; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">Hulog/Burahin</button>
+                <button onclick="deleteApp(${index})" style="background:#ff4d4d; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">Burahin</button>
             `;
             adminAppList.appendChild(adminItem);
         }
@@ -144,7 +175,7 @@ function addNewApp() {
     const nameInput = document.getElementById('appNameInput');
     const packageInput = document.getElementById('appPackageInput');
     
-    if (!nameInput.value || !packageInput.value) {
+    if (!nameInput || !packageInput || !nameInput.value || !packageInput.value) {
         alert("Paki-sulat ang App Name at Package Name!");
         return;
     }
@@ -156,9 +187,8 @@ function addNewApp() {
     };
 
     installedApps.push(newApp);
-    localStorage.setItem('vendo_apps', JSON.stringify(installedApps)); // Permanenteng save
+    localStorage.setItem('vendo_apps', JSON.stringify(installedApps)); // Permanenteng save sa CP
     
-    // Linisin ang inputs
     nameInput.value = '';
     packageInput.value = '';
     
@@ -185,32 +215,33 @@ function resetAppsToDefault() {
 }
 
 // ==========================================
-// 5. MGA PIN / ACCESS CONTROLS
+// 6. MGA PIN / ACCESS CONTROLS
 // ==========================================
 function checkAdminPIN() {
     const pinInput = prompt("Enter Admin PIN:");
-    if (pinInput === "1234") { // Pwede mo itong palitan ng sarili mong sikretong PIN
-        document.getElementById('adminPanel').style.display = 'block';
+    if (pinInput === "1234") { 
+        const adminPanel = document.getElementById('adminPanel');
+        if (adminPanel) adminPanel.style.display = 'block';
     } else if (pinInput !== null) {
         alert("Maling PIN! Subukan ulit.");
     }
 }
 
 function closeAdmin() {
-    document.getElementById('adminPanel').style.display = 'none';
+    const adminPanel = document.getElementById('adminPanel');
+    if (adminPanel) adminPanel.style.display = 'none';
 }
 
-// Mag-simulate ng hulog barya (Pang-test bilang Owner)
+// Mag-simulate ng hulog barya gamit ang Admin Buttons (Pang-test ng Owner)
 function addSimulatedTime(minutes) {
     remainingTime += (minutes * 60);
     localStorage.setItem('vendo_time', remainingTime);
     updateTimerDisplay();
     updateScreenState();
-    alert(`Idinagdag ang ${minutes} minuto!`);
 }
 
 // ==========================================
-// 6. INITIALIZATION (PAGBUKAS NG WEBSITE)
+// 7. INITIALIZATION (PAGBUKAS NG WEBSITE)
 // ==========================================
 window.onload = function() {
     renderAppList();
