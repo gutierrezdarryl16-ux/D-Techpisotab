@@ -1,165 +1,219 @@
-// 1. CONFIGURATION AT DEFAULT SETTINGS
-const ADMIN_PIN = "1234"; 
+// ==========================================
+// D-TECH PISOTAB VENDO - MAIN SCRIPT
+// ==========================================
 
-const defaultGames = [
-    { name: "Mobile Legends", icon: "https://img.icons8.com/color/96/mobile-legends.png", package: "com.mobile.legends" },
-    { name: "Roblox", icon: "https://img.icons8.com/color/96/roblox.png", package: "com.roblox.client" },
-    { name: "Call of Duty", icon: "https://img.icons8.com/color/96/call-of-duty-modern-warfare-default.png", package: "com.activision.callofduty.shooter" },
-    { name: "Facebook", icon: "https://img.icons8.com/color/96/facebook-new.png", package: "com.facebook.katana" },
-    { name: "Google Chrome", icon: "https://img.icons8.com/color/96/chrome.png", package: "com.android.chrome" },
-    { name: "Gmail", icon: "https://img.icons8.com/color/96/gmail-new.png", package: "com.google.android.gm" }
+// Mga default na apps na lalabas agad sa unang bukas
+const defaultApps = [
+    { name: "YouTube", package: "com.google.android.youtube", icon: "🌐" },
+    { name: "Mobile Legends", package: "com.mobile.legends", icon: "🎮" },
+    { name: "Roblox", package: "com.roblox.client", icon: "🕹️" }
 ];
 
-let gameList = JSON.parse(localStorage.getItem("vendoGames")) || defaultGames;
-let isFreePlayActive = false;
+// Kuhanin ang mga apps mula sa Local Storage (Permanenteng Memorya), kung wala, gamitin ang default
+let installedApps = JSON.parse(localStorage.getItem('vendo_apps')) || defaultApps;
 
-// 2. RENDERING SYSTEM
-function renderGames() {
-    const container = document.getElementById("gamesContainer");
-    if (!container) return;
-    container.innerHTML = ""; 
+// Variables para sa Oras at Barya
+let remainingTime = parseInt(localStorage.getItem('vendo_time')) || 0;
+let timeInterval = null;
 
-    gameList.forEach(game => {
-        const card = document.createElement("div");
-        card.className = "game-card";
-        
-        card.onclick = function() {
-            launchAndroidGame(game.package, game.name);
-        };
+// ==========================================
+// 1. PAG-ALIS AT PAGPAPAKITA NG LOCK SCREEN
+// ==========================================
+function updateScreenState() {
+    const lockScreen = document.getElementById('lockScreen');
+    const mainDashboard = document.getElementById('mainDashboard');
 
-        card.innerHTML = `
-            <img src="${game.icon}" alt="${game.name}">
-            <h3>${game.name}</h3>
-            <p>Tap to Open</p>
+    if (remainingTime > 0) {
+        // May oras: Itago ang lock screen, ipakita ang mga laro
+        lockScreen.style.display = 'none';
+        mainDashboard.style.display = 'block';
+        startTimer();
+    } else {
+        // Ubos na ang oras: Ipakita ang pulang lock screen framework
+        lockScreen.style.display = 'flex';
+        mainDashboard.style.display = 'none';
+        stopTimer();
+    }
+}
+
+// ==========================================
+// 2. TOTOONG PAGBUKAS NG APP (FULLY KIOSK)
+// ==========================================
+function launchApp(packageName) {
+    if (remainingTime <= 0) {
+        alert("Maghulog ng barya muna para makapaglaro!");
+        return;
+    }
+
+    // Sinusuri kung nasa loob ng Fully Kiosk Browser app ang CP
+    if (typeof fully !== 'undefined') {
+        try {
+            // Ito ang totoong utos na bubukas sa Android App mo
+            fully.startApplication(packageName);
+        } catch (error) {
+            alert("Hindi mahanap ang app na ito sa cellphone. Siguraduhing naka-install ang package: " + packageName);
+        }
+    } else {
+        // Fallback/Simulation kung tinetest mo lang sa laptop o regular Google Chrome
+        alert(" [SIMULATION MODE]\nNaka-on ang oras kaya bubukas dapat ang totoong app.\nPackage Name: " + packageName);
+    }
+}
+
+// ==========================================
+// 3. PAGPAPALAKAD NG ORAS (TIMER)
+// ==========================================
+function startTimer() {
+    if (timeInterval) return; // Wag doblehin ang timer kung umaandar na
+
+    timeInterval = setInterval(() => {
+        if (remainingTime > 0) {
+            remainingTime--;
+            localStorage.setItem('vendo_time', remainingTime);
+            updateTimerDisplay();
+        } else {
+            clearInterval(timeInterval);
+            timeInterval = null;
+            updateScreenState();
+        }
+    }, 1000);
+}
+
+function stopTimer() {
+    if (timeInterval) {
+        clearInterval(timeInterval);
+        timeInterval = null;
+    }
+}
+
+function updateTimerDisplay() {
+    const minutes = Math.floor(remainingTime / 60);
+    const seconds = remainingTime % 60;
+    const formattedTime = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    
+    // I-update ang text ng oras sa dashboard
+    const timerDisplay = document.getElementById('timerDisplay');
+    if (timerDisplay) timerDisplay.innerText = formattedTime;
+}
+
+// ==========================================
+// 4. ADMIN DASHBOARD ACTIONS (CRUD)
+// ==========================================
+function renderAppList() {
+    const appGrid = document.getElementById('appGrid');
+    const adminAppList = document.getElementById('adminAppList');
+    
+    if (!appGrid) return;
+
+    // Linisin ang lumang listahan bago i-render ang bago
+    appGrid.innerHTML = '';
+    if (adminAppList) adminAppList.innerHTML = '';
+
+    installedApps.forEach((app, index) => {
+        // I-render sa Main Screen (Dashboard ng Laro)
+        const appCard = document.createElement('div');
+        appCard.className = 'app-card';
+        appCard.onclick = () => launchApp(app.package);
+        appCard.innerHTML = `
+            <div class="app-icon">${app.icon || '📱'}</div>
+            <div class="app-name">${app.name}</div>
         `;
-        container.appendChild(card);
+        appGrid.appendChild(appCard);
+
+        // I-render sa Loob ng Admin Panel (Para sa Delete Button)
+        if (adminAppList) {
+            const adminItem = document.createElement('div');
+            adminItem.className = 'admin-app-item';
+            adminItem.style.display = 'flex';
+            adminItem.style.justifyContent = 'space-between';
+            adminItem.style.alignItems = 'center';
+            adminItem.style.marginBottom = '10px';
+            adminItem.style.padding = '5px';
+            adminItem.style.borderBottom = '1px solid #eee';
+            
+            adminItem.innerHTML = `
+                <div><strong>${app.name}</strong> (${app.package})</div>
+                <button onclick="deleteApp(${index})" style="background:#ff4d4d; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">Hulog/Burahin</button>
+            `;
+            adminAppList.appendChild(adminItem);
+        }
     });
 }
 
-// 3. GAME & APP LAUNCHER
-function launchAndroidGame(packageName, appName) {
-    if (typeof fully !== 'undefined') {
-        if (appName === "Google Chrome" || appName === "Gmail") {
-            if(confirm("Gusto mo bang mag-Switch Account o mag-log-in ng bagong Google Email?")) {
-                fully.loadUrl("https://accounts.google.com/AddSession");
-                return;
-            }
-        }
-        fully.startApplication(packageName);
-    } else {
-        alert("💻 Simulation: Opening -> " + appName);
-    }
-}
-
-// 4. THE COIN SWITCH SYSTEM (DITO KUKONTROLIN ANG LOCK SCREEN MO)
-function setupHardwareTimerConnection() {
-    if (navigator.getBattery) {
-        navigator.getBattery().then(function(battery) {
-            function updateLockState() {
-                const lockScreen = document.getElementById("lockScreen");
-
-                // Kapag naka-charge (May hulog ang Allan timer) o naka FREE PLAY ang admin
-                if (battery.charging || isFreePlayActive) {
-                    // ITATAGO ANG LOCK SCREEN AT LALABAS ANG MGA APPS
-                    lockScreen.style.display = "none";
-                } else {
-                    // WALANG BARYA -> EKSAGTONG LALABAS YUNG RE-DESIGNED LOCK SCREEN MO
-                    lockScreen.style.display = "flex";
-                }
-            }
-            updateLockState();
-            battery.addEventListener('chargingchange', updateLockState);
-        });
-    }
-}
-
-// 5. ADMIN PORTAL LOGIC
-function promptAdminPin() {
-    const enteredPin = prompt("👤 Enter Owner Security PIN:");
-    if (enteredPin === ADMIN_PIN) {
-        openAdminDashboard();
-    } else if (enteredPin !== null) {
-        alert("❌ Incorrect Admin PIN Access!");
-    }
-}
-
-function openAdminDashboard() {
-    document.getElementById("adminModal").style.display = "flex";
-    loadTabletAppsToDropdown();
-}
-
-function closeAdminDashboard() {
-    document.getElementById("adminModal").style.display = "none";
-}
-
-function loadTabletAppsToDropdown() {
-    const dropdown = document.getElementById("tabletAppDropdown");
-    if (!dropdown) return;
-
-    if (typeof fully !== 'undefined') {
-        let appsJson = fully.getAppList(); 
-        let apps = JSON.parse(appsJson);
-        dropdown.innerHTML = '<option value="">-- Choose an Installed Game/App --</option>';
-        apps.sort((a, b) => a.name.localeCompare(b.name));
-        apps.forEach(app => {
-            let option = document.createElement("option");
-            option.value = app.packageName;
-            option.text = app.name;
-            dropdown.appendChild(option);
-        });
-    } else {
-        dropdown.innerHTML = `
-            <option value="">-- PC Simulation Mode --</option>
-            <option value="com.tencent.ig">PUBG Mobile</option>
-        `;
-    }
-}
-
-function addSelectedGameFromTablet() {
-    const dropdown = document.getElementById("tabletAppDropdown");
-    const selectedPackage = dropdown.value;
-    const selectedName = dropdown.options[dropdown.selectedIndex].text;
-
-    if (!selectedPackage) {
-        alert("❌ Pumili muna ng app sa listahan!");
+// Magdagdag ng bagong app galing sa Admin Input
+function addNewApp() {
+    const nameInput = document.getElementById('appNameInput');
+    const packageInput = document.getElementById('appPackageInput');
+    
+    if (!nameInput.value || !packageInput.value) {
+        alert("Paki-sulat ang App Name at Package Name!");
         return;
     }
 
-    let isDuplicate = gameList.some(game => game.package === selectedPackage);
-    if (isDuplicate) {
-        alert("⚠️ Ang app na ito ay kasalukuyan nang naka-display!");
-        return;
-    }
+    const newApp = {
+        name: nameInput.value.trim(),
+        package: packageInput.value.trim(),
+        icon: "🎮" // Default icon para sa mga bagong laro
+    };
 
-    let appIcon = "https://img.icons8.com/color/96/controller.png"; 
-    if (typeof fully !== 'undefined') {
-        appIcon = "data:image/png;base64," + fully.getAppIconBase64(selectedPackage);
-    }
-
-    gameList.push({ name: selectedName, icon: appIcon, package: selectedPackage });
-    localStorage.setItem("vendoGames", JSON.stringify(gameList));
-    renderGames();
-    alert(`✅ Successfully Added: ${selectedName}`);
+    installedApps.push(newApp);
+    localStorage.setItem('vendo_apps', JSON.stringify(installedApps)); // Permanenteng save
+    
+    // Linisin ang inputs
+    nameInput.value = '';
+    packageInput.value = '';
+    
+    renderAppList();
+    alert("Matagumpay na idinagdag ang bagong app!");
 }
 
-function unlockFreePlay() {
-    isFreePlayActive = !isFreePlayActive;
-    alert(isFreePlayActive ? "🔓 Free Play Enabled! Lalabas na ang mga apps." : "🔒 Free Play Disabled! Balik sa lock screen.");
-    closeAdminDashboard();
-    setupHardwareTimerConnection(); // Re-trigger checking
-}
-
-function clearSavedGames() {
-    if (confirm("⚠️ Ibalik sa default apps?")) {
-        localStorage.removeItem("vendoGames");
-        gameList = defaultGames;
-        renderGames();
-        alert("✅ System reset successful!");
-        closeAdminDashboard();
+// Burahin ang app sa listahan
+function deleteApp(index) {
+    if (confirm("Sigurado ka bang gusto mong burahin ang app na ito?")) {
+        installedApps.splice(index, 1);
+        localStorage.setItem('vendo_apps', JSON.stringify(installedApps));
+        renderAppList();
     }
 }
 
+// I-reset ang buong listahan sa original na laro
+function resetAppsToDefault() {
+    if (confirm("Gusto mo bang ibalik sa default apps ang iyong vendo?")) {
+        installedApps = [...defaultApps];
+        localStorage.setItem('vendo_apps', JSON.stringify(installedApps));
+        renderAppList();
+    }
+}
+
+// ==========================================
+// 5. MGA PIN / ACCESS CONTROLS
+// ==========================================
+function checkAdminPIN() {
+    const pinInput = prompt("Enter Admin PIN:");
+    if (pinInput === "1234") { // Pwede mo itong palitan ng sarili mong sikretong PIN
+        document.getElementById('adminPanel').style.display = 'block';
+    } else if (pinInput !== null) {
+        alert("Maling PIN! Subukan ulit.");
+    }
+}
+
+function closeAdmin() {
+    document.getElementById('adminPanel').style.display = 'none';
+}
+
+// Mag-simulate ng hulog barya (Pang-test bilang Owner)
+function addSimulatedTime(minutes) {
+    remainingTime += (minutes * 60);
+    localStorage.setItem('vendo_time', remainingTime);
+    updateTimerDisplay();
+    updateScreenState();
+    alert(`Idinagdag ang ${minutes} minuto!`);
+}
+
+// ==========================================
+// 6. INITIALIZATION (PAGBUKAS NG WEBSITE)
+// ==========================================
 window.onload = function() {
-    renderGames();
-    setupHardwareTimerConnection();
+    renderAppList();
+    updateTimerDisplay();
+    updateScreenState();
 };
