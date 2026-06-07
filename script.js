@@ -99,12 +99,11 @@ function updateTimerDisplay() {
 // ==========================================
 // 4. COIN SLOT LISTENER (ANTI-SPAM & ACCUMULATION)
 // ==========================================
-// Ang function na ito ang tatawagin ng iyong hardware interface (Websocket/HTTP request)
-// Awtomatiko nitong idinaragdag at pinatatapong ang oras kahit mag-spam ang user
+// Ang function na ito ang tatawagin ng iyong hardware interface kapag naghulog ng barya
 function receiveCoinSignal(coinValue) {
     let minutesToAdd = 0;
 
-    // Set up ng rates: Baguhin ang minuto depende sa gusto mong presyo
+    // Set up ng rates: Pwede mong baguhin ang katumbas na minuto rito
     if (coinValue === 1) {
         minutesToAdd = 5;   // 1 Piso = 5 Minuto
     } else if (coinValue === 5) {
@@ -117,17 +116,28 @@ function receiveCoinSignal(coinValue) {
         // MATALINONG PAGPAPATONG (Accumulation): Idagdag sa kasalukuyang natitirang oras
         remainingTime += (minutesToAdd * 60);
         
-        // Permanenteng i-save agad sa memorya para iwas-kupit kahit mag-restart ang CP
+        // Permanenteng i-save agad sa memorya para iwas-bura kahit mag-restart ang CP
         localStorage.setItem('vendo_time', remainingTime);
         
-        // Agarang i-update ang screen para alam ng user na pumasok ang barya nila
+        // Agarang i-update ang screen para mapunta sa dashboard ng games
         updateTimerDisplay();
         updateScreenState();
     }
 }
 
 // ==========================================
-// 5. ADMIN DASHBOARD ACTIONS (CRUD)
+// 5. CHARGING DETECTION EVENT (AUTO-TRIGGER)
+// ==========================================
+// Kusa itong tinatawag ni Fully Kiosk sa tuwing nakakatanggap ng kuryente (charge) ang CP
+function onPowerConnected() {
+    // Piliting basahin ang huling selyadong oras at i-update ang screen para pumasok sa games
+    remainingTime = parseInt(localStorage.getItem('vendo_time')) || 0;
+    updateTimerDisplay();
+    updateScreenState();
+}
+
+// ==========================================
+// 6. ADMIN DASHBOARD ACTIONS (CRUD)
 // ==========================================
 function renderAppList() {
     const appGrid = document.getElementById('appGrid');
@@ -135,7 +145,6 @@ function renderAppList() {
     
     if (!appGrid) return;
 
-    // Linisin ang mga lumang listahan bago i-render ang bago
     appGrid.innerHTML = '';
     if (adminAppList) adminAppList.innerHTML = '';
 
@@ -183,11 +192,11 @@ function addNewApp() {
     const newApp = {
         name: nameInput.value.trim(),
         package: packageInput.value.trim(),
-        icon: "🎮" // Default icon para sa mga bagong laro
+        icon: "🎮"
     };
 
     installedApps.push(newApp);
-    localStorage.setItem('vendo_apps', JSON.stringify(installedApps)); // Permanenteng save sa CP
+    localStorage.setItem('vendo_apps', JSON.stringify(installedApps));
     
     nameInput.value = '';
     packageInput.value = '';
@@ -215,7 +224,7 @@ function resetAppsToDefault() {
 }
 
 // ==========================================
-// 6. MGA PIN / ACCESS CONTROLS
+// 7. MGA PIN / ACCESS CONTROLS
 // ==========================================
 function checkAdminPIN() {
     const pinInput = prompt("Enter Admin PIN:");
@@ -241,9 +250,14 @@ function addSimulatedTime(minutes) {
 }
 
 // ==========================================
-// 7. INITIALIZATION (PAGBUKAS NG WEBSITE)
+// 8. INITIALIZATION (PAGBUKAS NG WEBSITE)
 // ==========================================
 window.onload = function() {
+    // I-bind ang power connect event kung nasa loob ng Fully Kiosk Browser
+    if (typeof fully !== 'undefined') {
+        fully.bind('powerConnected', 'onPowerConnected()');
+    }
+    
     renderAppList();
     updateTimerDisplay();
     updateScreenState();
