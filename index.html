@@ -2,132 +2,282 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>D-TECH Premium Vendo</title>
-    <!-- Tailwind CSS for high-end aesthetic styling -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>D-TECH Pisotab OS v2.1</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none;
+        }
+
+        body {
+            background-color: #0b0f19;
+            color: #ffffff;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Header Navigation bar (Lilitaw lang kapag unlocked) */
+        header {
+            background: linear-gradient(90deg, #1e293b, #0f172a);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #3b82f6;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #3b82f6;
+            text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+        }
+
+        .admin-btn {
+            background: #334155;
+            color: #cbd5e1;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: 0.2s;
+        }
+
+        /* Emergency hidden admin trigger para sa Lock Screen */
+        .hidden-admin-trigger {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 60px;
+            height: 60px;
+            background: transparent;
+            z-index: 10000;
+            cursor: pointer;
+        }
+
+        /* Main App Interface Area */
+        main {
+            flex: 1;
+            padding: 25px;
+            overflow-y: auto;
+        }
+
+        .section-title {
+            font-size: 20px;
+            margin-bottom: 20px;
+            color: #94a3b8;
+            letter-spacing: 1px;
+        }
+
+        /* Gaming Grid Layout */
+        .gaming-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 20px;
+        }
+
+        .game-card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 15px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+
+        .game-card:hover {
+            transform: translateY(-5px);
+            border-color: #3b82f6;
+            box-shadow: 0 8px 15px rgba(59, 130, 246, 0.2);
+        }
+
+        .game-card img {
+            width: 75px;
+            height: 75px;
+            object-fit: contain;
+            margin-bottom: 12px;
+            border-radius: 12px;
+        }
+
+        .game-card h3 {
+            font-size: 15px;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: #f1f5f9;
+        }
+
+        .game-card p {
+            font-size: 12px;
+            color: #10b981;
+            font-weight: 500;
+        }
+
+        /* Overlay/Modals System */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        /* EKSAGTONG DISENYO MULA SA IMAGE_599542.PNG */
+        .lock-view {
+            background-color: #060913; 
+            flex-direction: column;
+            text-align: center;
+            padding: 20px;
+            border: 15px solid #bd1c1c; /* Pulong border frame sa gilid */
+            border-radius: 30px;
+        }
+
+        .coin-icon-container {
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle, #521818 0%, #290808 100%);
+            border: 2px solid #bd1c1c;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 25px;
+            box-shadow: 0 0 20px rgba(189, 28, 28, 0.3);
+        }
+
+        .coin-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #fcd34d 0%, #f59e0b 100%);
+            border-radius: 50%;
+            border: 3px dashed #b45309;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #78350f;
+            font-weight: bold;
+            font-size: 24px;
+        }
+
+        .lock-title {
+            font-size: clamp(32px, 6vw, 56px);
+            font-weight: 900;
+            color: #ef4444; 
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+        }
+
+        .lock-subtitle {
+            font-size: 16px;
+            color: #94a3b8;
+            max-width: 500px;
+            margin-bottom: 35px;
+            line-height: 1.5;
+            padding: 0 10px;
+        }
+
+        .rate-badge {
+            background-color: #0f172a;
+            border: 1px solid #1e293b;
+            padding: 14px 28px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #fbbf24; /* Yellow text sa rate code */
+            letter-spacing: 1px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        /* Admin Dialog Box style */
+        .modal-box {
+            background: #1e293b;
+            border: 2px solid #3b82f6;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+
+        .modal-box h2 { margin-bottom: 15px; color: #f8fafc; }
+        .modal-box select {
+            width: 100%; padding: 12px; background: #0f172a; border: 1px solid #475569;
+            color: #fff; border-radius: 8px; font-size: 16px; margin-bottom: 15px; outline: none;
+        }
+        .modal-box button {
+            width: 100%; padding: 12px; border: none; border-radius: 8px;
+            font-size: 16px; font-weight: bold; cursor: pointer; margin-bottom: 10px;
+        }
+
+        .btn-primary { background: #3b82f6; color: white; }
+        .btn-success { background: #10b981; color: white; }
+        .btn-danger { background: #ef4444; color: white; }
+        .btn-close { background: #475569; color: white; }
+    </style>
 </head>
-<body class="text-white font-sans overflow-hidden h-screen w-screen flex flex-col justify-between p-6 bg-slate-950">
+<body>
 
-    <!-- HEADER STATUS WITH D-TECH BRANDING -->
-    <div class="flex justify-between items-center bg-gray-900/80 backdrop-blur-md p-4 rounded-2xl shadow-2xl border border-blue-500/30">
-        <div class="flex items-center space-x-3">
-            <div class="bg-gradient-to-r from-blue-600 to-cyan-500 px-4 py-2 rounded-xl shadow-lg shadow-blue-500/20">
-                <span class="text-xl font-black tracking-tighter text-white">D-TECH</span>
-            </div>
-            <div>
-                <h1 class="text-xs font-bold tracking-widest text-gray-400 font-mono uppercase">Premium Tablet Vendo</h1>
-                <p class="text-[10px] text-gray-500 font-mono" id="hardware-indicator">Hardware Hook: Scanning...</p>
-            </div>
+    <!-- SECRETO AT TRANSPARENT NA BUTTON PARA SA ADMIN (Kapag naka-lock ang screen, i-tap mo lang ang top-right corner para mag-admin code) -->
+    <div class="hidden-admin-trigger" onclick="promptAdminPin()"></div>
+
+    <!-- TOP CONTROL HEADER (Lilitaw lang kapag may oras) -->
+    <header>
+        <div class="logo">D-TECH VENDO</div>
+        <div id="timeStatus" style="font-weight: 500; color: #10b981;">🟢 VENDO ACTIVE - ENJOY APPS!</div>
+        <button class="admin-btn" onclick="promptAdminPin()">⚙️ Admin</button>
+    </header>
+
+    <!-- MAIN APP SCREEN (Dito lalabas ang mga app kapag may hulog na barya) -->
+    <main>
+        <div class="section-title">AVAILABLE APPS & GAMES</div>
+        <div class="gaming-grid" id="gamesContainer">
+            <!-- Dynamic game cards will load here via JavaScript -->
         </div>
-        <div id="status-badge" class="bg-gray-800 px-4 py-2 rounded-xl text-xs font-black tracking-widest border border-gray-700">
-            CONNECTING TO ALLAN TIMER
+    </main>
+
+    <!-- ANG IYONG ORIGINAL LOCK SCREEN VIEW MULA SA IMAGE_599542.PNG -->
+    <div id="lockScreen" class="overlay lock-view" style="display: flex;">
+        <div class="coin-icon-container">
+            <div class="coin-icon">Ⅲ</div>
+        </div>
+        <h1 class="lock-title">D-TECH VENDO LOCKED</h1>
+        <p class="lock-subtitle">Pakisiguradong may oras ang Allan Timer bago hawakan ang tablet.</p>
+        <div class="rate-badge">
+            RATE: ₱1.00 = 4 MINUTES | ₱5.00 = 20 MINUTES
         </div>
     </div>
 
-    <!-- MAIN DISPLAY TERMINAL -->
-    <div class="flex-grow flex items-center justify-center my-4 relative">
-        
-        <!-- LAYER 1: STRICT LOCK SCREEN -->
-        <div id="lock-screen" class="absolute inset-0 bg-gray-950/98 backdrop-blur-md flex flex-col items-center justify-center text-center p-8 rounded-3xl border-4 border-red-600 shadow-2xl z-40 transition-all duration-300">
-            <div class="w-24 h-24 bg-red-600/10 border-2 border-red-500 rounded-full flex items-center justify-center text-5xl mb-4 animate-bounce">
-                🪙
-            </div>
-            <h2 class="text-5xl font-black mb-2 tracking-tighter text-red-500">D-TECH VENDO LOCKED</h2>
-            <p class="text-gray-400 text-sm max-w-sm mb-6">Pakisiguradong may oras ang Allan Timer bago hawakan ang tablet.</p>
-            <div class="bg-gray-900/90 px-6 py-3 rounded-xl border border-gray-800 text-sm font-bold text-yellow-400 shadow-lg shadow-yellow-500/5">
-                RATE: ₱1.00 = 4 MINUTES | ₱5.00 = 20 MINUTES
-            </div>
-        </div>
-
-        <!-- LAYER 2: GAMING PORTAL INTERFACE -->
-        <div id="game-menu" class="hidden flex flex-col w-full max-w-5xl h-full justify-center items-center space-y-6 z-10">
+    <!-- OWNER ADMIN DASHBOARD MODAL -->
+    <div id="adminModal" class="overlay" style="display: none; background: rgba(15, 23, 42, 0.95);">
+        <div class="modal-box">
+            <h2>⚙️ Owner Dashboard</h2>
+            <button class="btn-success" onclick="unlockFreePlay()">🔓 ACTIVATE FREE PLAY</button>
+            <button class="btn-danger" onclick="clearSavedGames()">🗑️ RESET APPS TO DEFAULT</button>
+            <hr style="border: 0.5px solid #334155; margin: 20px 0;">
             
-            <!-- DIGITAL TIME DISPLAY -->
-            <div class="bg-gray-900/90 px-8 py-3 rounded-2xl border-2 border-cyan-500 text-center shadow-xl shadow-cyan-500/10 animate-pulse">
-                <p class="text-[10px] text-gray-400 font-mono uppercase tracking-widest">D-TECH REMAINING TIME</p>
-                <h3 id="time-counter" class="text-4xl font-black text-cyan-400 font-mono mt-0.5">20:00</h3>
-            </div>
-
-            <!-- GAMING CARDS GRID (ML, ROBLOX, COD FIXED GRAPHICS DESIGN) -->
-            <div class="grid grid-cols-3 gap-6 w-full">
-                
-                <!-- Mobile Legends Card -->
-                <button onclick="launchApp('mobilelegends://')" class="game-card group h-44 rounded-2xl shadow-xl flex flex-col items-center justify-between p-5 border-2 border-blue-500/50 active:scale-95 transition-all duration-200 relative overflow-hidden">
-                    <!-- ACTUAL ML IMAGE BACKGROUND -->
-                    <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1612287230202-1bf1d85d1bdf?q=80&w=500')] bg-cover bg-center opacity-40 group-hover:opacity-60 group-hover:scale-105 transition-all duration-300 z-0"></div>
-                    <div class="absolute inset-0 bg-gradient-to-t from-blue-950 via-slate-950/40 to-transparent z-0"></div>
-                    
-                    <div class="text-center z-10 mt-2">
-                        <div class="text-4xl opacity-80 group-hover:scale-110 transition-transform duration-200">⚔️</div>
-                    </div>
-                    <div class="flex flex-col items-center z-10 w-full">
-                        <span class="font-black text-lg tracking-wide text-blue-200 drop-shadow-[0_2px_5px_rgba(0,0,0,1)]">MOBILE LEGENDS</span>
-                        <span class="text-[9px] font-bold text-cyan-400 tracking-widest mt-1 font-mono bg-blue-950/90 px-3 py-0.5 rounded-full border border-blue-500/40 shadow-lg">TAP TO PLAY</span>
-                    </div>
-                </button>
-
-                <!-- Roblox Card -->
-                <button onclick="launchApp('roblox://')" class="game-card group h-44 rounded-2xl shadow-xl flex flex-col items-center justify-between p-5 border-2 border-red-500/50 active:scale-95 transition-all duration-200 relative overflow-hidden">
-                    <!-- ACTUAL ROBLOX STYLE IMAGE BACKGROUND -->
-                    <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?q=80&w=500')] bg-cover bg-center opacity-40 group-hover:opacity-60 group-hover:scale-105 transition-all duration-300 z-0"></div>
-                    <div class="absolute inset-0 bg-gradient-to-t from-red-950 via-slate-950/40 to-transparent z-0"></div>
-                    
-                    <div class="text-center z-10 mt-2">
-                        <div class="text-4xl opacity-80 group-hover:scale-110 transition-transform duration-200">🟥</div>
-                    </div>
-                    <div class="flex flex-col items-center z-10 w-full">
-                        <span class="font-black text-lg tracking-wide text-red-200 drop-shadow-[0_2px_5px_rgba(0,0,0,1)]">ROBLOX WORLD</span>
-                        <span class="text-[9px] font-bold text-rose-400 tracking-widest mt-1 font-mono bg-red-950/90 px-3 py-0.5 rounded-full border border-red-500/40 shadow-lg">TAP TO PLAY</span>
-                    </div>
-                </button>
-
-                <!-- CODM Card -->
-                <button onclick="launchApp('codm://')" class="game-card group h-44 rounded-2xl shadow-xl flex flex-col items-center justify-between p-5 border-2 border-amber-500/50 active:scale-95 transition-all duration-200 relative overflow-hidden">
-                    <!-- ACTUAL MILITARY/COD STYLE IMAGE BACKGROUND -->
-                    <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=500')] bg-cover bg-center opacity-40 group-hover:opacity-60 group-hover:scale-105 transition-all duration-300 z-0"></div>
-                    <div class="absolute inset-0 bg-gradient-to-t from-amber-950 via-slate-950/40 to-transparent z-0"></div>
-                    
-                    <div class="text-center z-10 mt-2">
-                        <div class="text-4xl opacity-80 group-hover:scale-110 transition-transform duration-200">🔫</div>
-                    </div>
-                    <div class="flex flex-col items-center z-10 w-full">
-                        <span class="font-black text-lg tracking-wide text-amber-200 drop-shadow-[0_2px_5px_rgba(0,0,0,1)]">CALL OF DUTY</span>
-                        <span class="text-[9px] font-bold text-amber-400 tracking-widest mt-1 font-mono bg-amber-950/90 px-3 py-0.5 rounded-full border border-amber-500/40 shadow-lg">TAP TO PLAY</span>
-                    </div>
-                </button>
-
-            </div>
+            <h3 style="margin-bottom: 10px; color: #94a3b8; font-size: 16px;">➕ Quick Add Installed Game</h3>
+            <select id="tabletAppDropdown">
+                <option value="">-- Loading apps from tablet... --</option>
+            </select>
             
-            <!-- TEST COIN SIMULATOR -->
-            <div class="flex space-x-4 bg-gray-900/50 backdrop-blur-sm p-2.5 rounded-xl border border-gray-800 text-xs">
-                <span class="text-gray-500 self-center font-bold font-mono">D-TECH Coin Sim:</span>
-                <button onclick="simulateCoin(1)" class="bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg font-bold text-cyan-400">+ ₱1 (4 Mins)</button>
-                <button onclick="simulateCoin(5)" class="bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-lg font-bold text-cyan-400">+ ₱5 (20 Mins)</button>
-            </div>
-
-        </div>
-
-    </div>
-
-    <!-- FOOTER PANEL WITH SECRET ADMIN PORTAL -->
-    <div class="flex justify-between items-center text-[10px] text-gray-600 font-mono">
-        <span>D-TECH OS v2.5.0</span>
-        <span onclick="openAdminPortal()" class="cursor-pointer active:text-gray-400 bg-gray-900/50 px-3 py-1 rounded border border-gray-800/60">⚙️ D-TECH Admin Portal</span>
-    </div>
-
-    <!-- ADMINISTRATIVE LOCK OVERRIDE INTERFACE -->
-    <div id="admin-modal" class="hidden fixed inset-0 bg-black/95 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-        <div class="bg-gray-900 p-6 rounded-2xl max-w-sm w-full border border-gray-800">
-            <h3 class="text-lg font-bold text-cyan-500 mb-4 flex items-center">⚙️ D-TECH Owner Dashboard</h3>
-            <div class="space-y-3">
-                <button onclick="setAdminOverride(true)" class="w-full bg-emerald-600 font-bold py-3 rounded-xl text-xs tracking-wider">🔓 UNLOCK (FREE PLAY / TEST)</button>
-                <button onclick="setAdminOverride(false)" class="w-full bg-red-600 font-bold py-3 rounded-xl text-xs tracking-wider">🔒 FORCE LOCK DEVICE</button>
-                <button onclick="clearAdminOverride()" class="w-full bg-blue-600 font-bold py-3 rounded-xl text-xs tracking-wider">🔄 RUN ALLAN HARDWARE AUTO-CONTROL</button>
-                <hr class="border-gray-800 my-2">
-                <button onclick="closeAdminPortal()" class="w-full bg-gray-800 text-gray-400 py-2 rounded-xl text-xs font-bold">CLOSE SETTINGS</button>
-            </div>
+            <button class="btn-primary" onclick="addSelectedGameFromTablet()">Add Selected Game</button>
+            <button class="btn-close" onclick="closeAdminDashboard()" style="margin-top: 15px;">Close Panel</button>
         </div>
     </div>
 
